@@ -1,0 +1,9 @@
+{
+  "edition": "Stable",
+  "version": "3.6.0",
+  "kind": "source",
+  "windows_executable_built": false,
+  "runtime_bundled": false,
+  "setup": "wizard",
+  "launcher": "quick-launch EXE (default); standalone EXE optional"
+}

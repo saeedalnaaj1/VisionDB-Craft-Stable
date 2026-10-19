@@ -1,0 +1,39 @@
+name: VisionDB Craft edition builds
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  core-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install '.[dev]'
+      - run: python -m pytest -q
+      - run: python tools/stage_edition.py stable --output build/test-source
+      - run: cd build/test-source/VisionDB-Craft-Stable && python -m pytest -q
+  windows:
+    runs-on: windows-latest
+    needs: core-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: [stable]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'pyinstaller==6.22.3'
+      - if: matrix.edition == 'stable'
+        run: python tools/build_windows.py stable
+      - if: matrix.edition == 'plus'
+        run: python tools/build_windows.py plus --with-ai
+      - run: choco install innosetup --yes --no-progress
+      - run: python tools/create_installer.py ${{ matrix.edition }} --compiler "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VisionDB-Craft-${{ matrix.edition }}-Windows
+          path: |
+            dist/*.zip
+            dist/*-Setup.exe
